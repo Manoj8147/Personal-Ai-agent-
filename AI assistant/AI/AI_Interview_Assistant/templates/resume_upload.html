@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Upload - AI Interview Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .resume-upload-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .upload-card {
+            background: var(--bg-white);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .upload-icon {
+            text-align: center;
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .upload-title {
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+        }
+
+        .upload-subtitle {
+            text-align: center;
+            color: var(--text-light);
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+
+        .upload-instructions {
+            background: #F0F9FF;
+            border-left: 4px solid var(--primary-color);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .upload-instructions ul {
+            margin: 8px 0 0 20px;
+            padding: 0;
+        }
+
+        .upload-instructions li {
+            margin: 6px 0;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 40px 20px;
+            text-align: center;
+            border: 2px dashed var(--primary-color);
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.05), rgba(6, 182, 212, 0.05));
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input-label:hover {
+            background: rgba(37, 99, 235, 0.1);
+            border-color: #1d4ed8;
+        }
+
+        .file-input-label.dragover {
+            background: rgba(37, 99, 235, 0.15);
+            border-color: #1d4ed8;
+            transform: scale(1.02);
+        }
+
+        .file-input-icon {
+            font-size: 2.5em;
+            margin-bottom: 12px;
+        }
+
+        .file-input-text {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+        }
+
+        .file-input-subtext {
+            font-size: 0.85em;
+            color: var(--text-light);
+        }
+
+        #resumeFile {
+            display: none;
+        }
+
+        .file-selected {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background: #F0FDF4;
+            border: 1px solid var(--success-color);
+            border-radius: 8px;
+            margin-bottom: 24px;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .file-selected.show {
+            display: block;
+        }
+
+        .file-selected-icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        .file-selected-name {
+            font-weight: 600;
+            color: var(--success-color);
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+
+        .file-selected-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 12px;
+        }
+
+        .file-selected-actions button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .remove-file-btn {
+            background: #FFE4E6;
+            color: var(--danger-color);
+        }
+
+        .remove-file-btn:hover {
+            background: #FFC9D1;
+        }
+
+        .upload-button-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .upload-button-group button {
+            flex: 1;
+        }
+
+        .upload-form-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .upload-form-actions button {
+            flex: 1;
+        }
+
+        .parse-result {
+            display: none;
+            margin-top: 30px;
+            padding: 24px;
+            background: #F8FAFC;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .parse-result.show {
+            display: block;
+        }
+
+        .result-section {
+            margin-bottom: 20px;
+        }
+
+        .result-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-label {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+
+        .result-value {
+            color: var(--text-dark);
+            margin-bottom: 4px;
+        }
+
+        .result-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .result-list li {
+            padding: 6px 0;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-list li:before {
+            content: "✔";
+            color: var(--success-color);
+            font-weight: 700;
+        }
+
+        .result-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 20px 0;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading-spinner.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message {
+            display: none;
+            padding: 16px;
+            background: #FEE2E2;
+            border: 1px solid var(--danger-color);
+            border-radius: 8px;
+            color: var(--danger-color);
+            margin-bottom: 20px;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .success-message {
+            display: none;
+            padding: 16px;
+            background: #DCFCE7;
+            border: 1px solid var(--success-color);
+            border-radius: 8px;
+            color: var(--success-color);
+            margin-bottom: 20px;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .continue-button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary-color), #06B6D4);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .continue-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .continue-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .file-types-info {
+            text-align: center;
+            font-size: 0.85em;
+            color: var(--text-light);
+            margin-top: 16px;
+        }
+
+        .file-types-info strong {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="resume-upload-container">
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="background: linear-gradient(135deg, var(--primary-color), #06B6D4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 2em; margin-bottom: 8px;">🎤 AI Interview Assistant</h1>
+            <p style="color: var(--text-light);">Upload your resume to get started</p>
+        </div>
+
+        <div class="upload-card">
+            <!-- Error Message -->
+            <div id="errorMessage" class="error-message"></div>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="success-message"></div>
+
+            <!-- Upload Instructions -->
+            <div class="upload-instructions">
+                <strong>How it works:</strong>
+                <ul>
+                    <li>Upload your resume (PDF, DOCX, or TXT)</li>
+                    <li>We'll extract your skills, experience, and education</li>
+                    <li>AI will use this to personalize your interview responses</li>
+                </ul>
+            </div>
+
+            <!-- File Input -->
+            <div class="file-input-wrapper">
+                <label for="resumeFile" class="file-input-label" id="fileInputLabel">
+                    <div class="file-input-icon">📄</div>
+                    <div class="file-input-text">Click to upload or drag and drop</div>
+                    <div class="file-input-subtext">PDF, DOCX, or TXT (Max 16MB)</div>
+                </label>
+                <input type="file" id="resumeFile" accept=".pdf,.docx,.txt" />
+            </div>
+
+            <!-- File Selected -->
+            <div id="fileSelected" class="file-selected">
+                <div class="file-selected-icon">✔️</div>
+                <div class="file-selected-name" id="fileName"></div>
+                <div class="file-selected-actions">
+                    <button class="remove-file-btn" onclick="removeFile()">Change File</button>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loadingSpinner" class="loading-spinner">
+                <div class="spinner"></div>
+                <p style="color: var(--text-light); margin-top: 12px;">Parsing your resume...</p>
+            </div>
+
+            <!-- Upload Button -->
+            <div id="uploadButtonContainer" class="upload-button-group">
+                <button class="btn btn-primary" id="uploadBtn" style="display: none; width: 100%;">
+                    📤 Upload Resume
+                </button>
+            </div>
+
+            <!-- Parse Result -->
+            <div id="parseResult" class="parse-result">
+                <div class="result-section">
+                    <div class="result-label">✨ Resume Parsed Successfully!</div>
+                </div>
+
+                <div id="nameSection" class="result-section" style="display: none;">
+                    <div class="result-label">Name</div>
+                    <div class="result-value" id="nameValue"></div>
+                </div>
+
+                <div class="result-divider"></div>
+
+                <div id="skillsSection" class="result-section" style="display: none;">
+                    <div class="result-label">🔧 Top Skills</div>
+                    <ul class="result-list" id="skillsList"></ul>
+                </div>
+
+                <div id="educationSection" class="result-section" style="display: none;">
+                    <div class="result-label">🎓 Education</div>
+                    <ul class="result-list" id="educationList"></ul>
+                </div>
+
+                <div id="projectsSection" class="result-section" style="display: none;">
+                    <div class="result-label">📁 Projects</div>
+                    <ul class="result-list" id="projectsList"></ul>
+                </div>
+
+                <button class="continue-button" onclick="goToInterview()">
+                    🚀 Start Interview
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='resume_upload.js') }}"></script>
+</body>
+</html>
